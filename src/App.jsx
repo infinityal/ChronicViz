@@ -2,8 +2,10 @@
 
 import './App.css'
 import * as d3 from "d3";
+import { useState } from 'react';
   
 function App() {
+  const [year, setYear] = useState(2022);
 
   const margin = {top: 70, right: 30, bottom: 200, left: 120},
     width = 1600 - margin.left - margin.right,
@@ -14,7 +16,7 @@ function App() {
     
 
   d3.json("src/data/PopData.json").then((data) => {
-    data = data.filter((d) => {return d.Variant === "Medium" && d.Time === "2022" && d.PopTotal > 20000})
+    data = data.filter((d) => {return d.Variant === "Medium" && d.Time === year.toString() && d.PopTotal > 20000})
     console.log(data)
 
     data.sort(function(b, a) {
@@ -26,31 +28,45 @@ function App() {
       .domain(data.map(d => d.Location))
       .padding(0.2);
 
-
+    const tooltip = d3.select("#barchart_tooltip")
+      .append("div")
+      .style("opacity", 0)
+      .attr("class", "tooltip")
+      .style("background-color", "white")
+      .style("border", "solid")
+      .style("border-width", "2px")
+      .style("border-radius", "5px")
+      .style("padding", "5px")
      
+    const mouseover = function(event,d) {
+      tooltip
+        .style("opacity", 1)
+      d3.select(this)
+        .style("stroke", "black")
+        .style("opacity", 1)
+    }
+    const mousemove = function(event,d) {
+      tooltip
+        .html('<u>' + d.Location + '</u>' + "<br>" + d.PopTotal * 1000 + " inhabitants")
+        .style("left", (event.x)/2 + "px")
+        .style("top", (event.y)/2 + "px")
+    }
+    const mouseleave = function(event,d) {
+      tooltip
+        .style("opacity", 0)
+      d3.select(this)
+        .style("stroke", "none")
+        .style("opacity", 0.8)
+    }
 
-    const svg_bar = d3.select("#pop_BarChart")
-                      .append("svg")
+
+    const svg_bar = d3.select(".svg_bar_chart")
                       .attr("height", height + margin.top + margin.bottom)
                       .attr("class", "Bar_Chart")
                       .attr("width", width + margin.left + margin.right)
                       .append("g")
-      .attr("transform", `translate(${margin.left},${margin.top})`);
-      console.log("svg created!");
-
-      
-  
-    /*co nst Tooltip = d3
-    .select('body')
-    .append('div')
-    .attr('class', 'd3-tooltip')
-    .style('position', 'absolute')
-    .style('z-index', '10')
-    .style('visibility', 'hidden')
-    .style('padding', '10px')
-    .style('background', 'rgba(0,0,0,0.6)')
-    .style('border-radius', '4px')
-    .style('color', '#fff')*/
+                      .attr("transform", `translate(${margin.left},${margin.top})`);
+    console.log("svg created!");
 
     const y = d3.scaleLinear()
     .domain([0, 2260])
@@ -58,7 +74,7 @@ function App() {
 
   
     
-
+    // Add X axis
     svg_bar.append("g")
       
       .attr("transform", `translate(0, ${height})`)
@@ -67,15 +83,10 @@ function App() {
       .attr("transform", "translate(-10,0)rotate(-45)")
       .style("text-anchor", "end");
 
-    svg_bar.append('g').call(d3.axisLeft(y));
     // Add Y axis
-    
-    
+    svg_bar.append('g').call(d3.axisLeft(y));
 
-      
-      
-  
-    // Bars
+    // Add Bars
     svg_bar.selectAll("mybar")
       .data(data)
       .join("rect")
@@ -84,25 +95,31 @@ function App() {
       .attr("width", x.bandwidth())
       .attr("height", d => height - y(d.PopTotal/ 1000))
       .attr("fill", "#69b3a2")
+      .on("mouseover", mouseover)
+      .on("mousemove", mousemove)
+      .on("mouseleave", mouseleave)
       
 
-      svg_bar.append("text")
-      .attr("x", (width / 2))             
-      .attr("y", 0 - (margin.top / 2))
-      .attr("text-anchor", "right")  
-      .style("font-size", "30px") 
-      .text("2022 World Population Data(Countries' Pop > 2M) ");
-
-    
-   
-
+    // Add Title
+    svg_bar.append("text")
+    .attr("x", (width / 2))             
+    .attr("y", 0 - (margin.top / 2))
+    .attr("text-anchor", "middle")  
+    .style("font-size", "20px") 
+    .text(year + " Population Data(Countries' Pop > 2M) ");
 })
-
-
   return (
     <div className="App">
-      <h1>World Population Visualization 1950 - 2100</h1>
-      <div id = "pop_BarChart"></div>
+      <div className='Header'>
+        <h1>World Population Visualization 1950 - 2100</h1>
+      </div>
+      <form>
+        <input type="number" id="buttonSize" defaultValue = {2022} onChange={(e) => {setYear(e.target.value)}}/>
+      </form>
+      <div id = "pop_BarChart">
+        <svg className='svg_bar_chart'/>
+      </div>
+      <div id="barchart_tooltip"></div>
     </div>
   )
 }
