@@ -1,7 +1,7 @@
 'use strict';
 
 import * as d3 from "d3"
-import {usestate} from "react-dom"
+import * as React from 'react';
   
 function LineChart() {
   // set the dimensions and margins of the graph
@@ -72,13 +72,14 @@ function LineChart() {
           })
 
 
+
     // Add Title
     svg.append("text")
            .attr("x", (width / 2))             
            .attr("y", 0 - (margin.top / 2))
            .attr("text-anchor", "middle")  
            .style("font-size", "20px") 
-           .text("1950 - 2100 Population Data(Countries' Pop > 45M) ");
+           .text("Which country will have the largest population in the future?");
 
 
     // Handmade legend
